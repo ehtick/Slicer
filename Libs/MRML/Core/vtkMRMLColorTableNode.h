@@ -57,15 +57,17 @@ public:
   vtkLookupTable* GetLookupTable() override;
 
   /// Set lookup table object that this object will use.
+  /// By default, all colors in the lookup table are set to "defined" for backward compatibility.
+  /// To avoid this, set markAllColorsAsDefined to false.
   /// \sa GetLookupTable()
-  virtual void SetAndObserveLookupTable(vtkLookupTable *newLookupTable);
+  virtual void SetAndObserveLookupTable(vtkLookupTable *newLookupTable, bool markAllColorsAsDefined=true);
 
   /// \deprecated Kept only for backward compatibility.
   /// Use SetAndObserveLookupTable method instead.
   /// \sa SetAndObserveLookupTable()
   virtual void SetLookupTable(vtkLookupTable* newLookupTable)
   {
-    SetAndObserveLookupTable(newLookupTable);
+    this->SetAndObserveLookupTable(newLookupTable, /*markAllColorsAsDefined=*/true);
   }
 
   ///
@@ -250,6 +252,9 @@ protected:
   ~vtkMRMLColorTableNode() override;
   vtkMRMLColorTableNode(const vtkMRMLColorTableNode&);
   void operator=(const vtkMRMLColorTableNode&);
+
+  /// Log error message and return false if not a valid color index.
+  bool IsValidColorIndex(int entry, const std::string& callerMethod, bool isCallerMethodSet=false);
 
   ///
   /// The look up table, constructed according to the Type.

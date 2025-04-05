@@ -13,7 +13,6 @@ Version:   $Revision: 1.2 $
 =========================================================================auto=*/
 
 // MRML includes
-#include "vtkEventBroker.h"
 #include "vtkMRMLScalarVolumeDisplayNode.h"
 #include "vtkMRMLScene.h"
 #include "vtkMRMLProceduralColorNode.h"
@@ -21,7 +20,6 @@ Version:   $Revision: 1.2 $
 
 // VTK includes
 #include <vtkAlgorithmOutput.h>
-#include <vtkCallbackCommand.h>
 #include <vtkColorTransferFunction.h>
 #include <vtkImageAppendComponents.h>
 #include <vtkImageCast.h>
@@ -52,6 +50,7 @@ vtkMRMLScalarVolumeDisplayNode::vtkMRMLScalarVolumeDisplayNode()
   this->AutoWindowLevel = 1;
   this->AutoThreshold = 0;
   this->ApplyThreshold = 0;
+  this->InvertDisplayScalarRange = 0;
 
   // try setting a default grayscale color map
   //this->SetDefaultColorMap(0);
@@ -105,8 +104,7 @@ vtkMRMLScalarVolumeDisplayNode::vtkMRMLScalarVolumeDisplayNode()
   this->HistogramStatistics = nullptr;
   this->IsInCalculateAutoLevels = false;
 
-  vtkEventBroker::GetInstance()->AddObservation(
-    this, vtkCommand::ModifiedEvent, this, this->MRMLCallbackCommand  , 10000.);
+  this->MRMLObserverManager->ObserveObject(this, 10000.);
 }
 
 //----------------------------------------------------------------------------
@@ -148,8 +146,7 @@ void vtkMRMLScalarVolumeDisplayNode::SetInputImageDataConnection(vtkAlgorithmOut
 
   if (oldInputImageDataAlgorithm != nullptr)
   {
-    vtkEventBroker::GetInstance()->RemoveObservations(
-      oldInputImageDataAlgorithm, vtkCommand::ModifiedEvent, this, this->MRMLCallbackCommand );
+    vtkUnObserveMRMLObjectMacro(oldInputImageDataAlgorithm);
   }
 
   this->Superclass::SetInputImageDataConnection(imageDataConnection);
@@ -158,8 +155,7 @@ void vtkMRMLScalarVolumeDisplayNode::SetInputImageDataConnection(vtkAlgorithmOut
     this->GetInputImageDataConnection()->GetProducer() : nullptr;
   if (inputImageDataAlgorithm != nullptr)
   {
-    vtkEventBroker::GetInstance()->AddObservation(
-      inputImageDataAlgorithm, vtkCommand::ModifiedEvent, this, this->MRMLCallbackCommand );
+    vtkObserveMRMLObjectMacro(inputImageDataAlgorithm);
   }
 
 }
@@ -247,6 +243,11 @@ void vtkMRMLScalarVolumeDisplayNode::WriteXML(ostream& of, int nIndent)
   }
   {
   std::stringstream ss;
+  ss << this->InvertDisplayScalarRange;
+  of << " invertDisplayScalarRange=\"" << ss.str() << "\"";
+  }
+  {
+  std::stringstream ss;
   ss << this->AutoWindowLevel;
   of << " autoWindowLevel=\"" << ss.str() << "\"";
   }
@@ -324,6 +325,12 @@ void vtkMRMLScalarVolumeDisplayNode::ReadXMLAttributes(const char** atts)
       ss << attValue;
       ss >> this->Interpolate;
     }
+    else if (!strcmp(attName, "invertDisplayScalarRange"))
+    {
+      std::stringstream ss;
+      ss << attValue;
+      ss >> this->InvertDisplayScalarRange;
+    }
     else if (!strcmp(attName, "autoWindowLevel"))
     {
       std::stringstream ss;
@@ -355,24 +362,25 @@ void vtkMRMLScalarVolumeDisplayNode::ReadXMLAttributes(const char** atts)
 void vtkMRMLScalarVolumeDisplayNode::CopyContent(vtkMRMLNode* anode, bool deepCopy/*=true*/)
 {
   MRMLNodeModifyBlocker blocker(this);
-  Superclass::CopyContent(anode, deepCopy);
+
+  // CopyContent updates the color table, so we need to set the display range first
   vtkMRMLScalarVolumeDisplayNode *node = vtkMRMLScalarVolumeDisplayNode::SafeDownCast(anode);
-  if (!node)
+  if (node)
   {
-    return;
+    this->SetAutoWindowLevel(node->GetAutoWindowLevel());
+    this->SetWindowLevel(node->GetWindow(), node->GetLevel());
+    this->SetAutoThreshold(node->GetAutoThreshold()); // don't want to run CalculateAutoLevel
+    this->SetApplyThreshold(node->GetApplyThreshold());
+    this->SetThreshold(node->GetLowerThreshold(), node->GetUpperThreshold());
+    this->SetInterpolate(node->Interpolate);
+    this->SetInvertDisplayScalarRange(node->GetInvertDisplayScalarRange());
+    for (int p = 0; p < node->GetNumberOfWindowLevelPresets(); p++)
+    {
+      this->AddWindowLevelPreset(node->GetWindowPreset(p), node->GetLevelPreset(p));
+    }
   }
 
-  this->SetAutoWindowLevel( node->GetAutoWindowLevel() );
-  this->SetWindowLevel(node->GetWindow(), node->GetLevel());
-  this->SetAutoThreshold( node->GetAutoThreshold() ); // don't want to run CalculateAutoLevel
-  this->SetApplyThreshold(node->GetApplyThreshold());
-  this->SetThreshold(node->GetLowerThreshold(), node->GetUpperThreshold());
-  this->SetInterpolate(node->Interpolate);
-  for (int p = 0; p < node->GetNumberOfWindowLevelPresets(); p++)
-  {
-    this->AddWindowLevelPreset(node->GetWindowPreset(p), node->GetLevelPreset(p));
-  }
-
+  Superclass::CopyContent(anode, deepCopy);
 }
 
 //----------------------------------------------------------------------------
@@ -394,6 +402,7 @@ void vtkMRMLScalarVolumeDisplayNode::PrintSelf(ostream& os, vtkIndent indent)
   os << indent << "UpperThreshold:    " << this->GetUpperThreshold() << "\n";
   os << indent << "LowerThreshold:    " << this->GetLowerThreshold() << "\n";
   os << indent << "Interpolate:       " << this->Interpolate << "\n";
+  os << indent << "InvertDisplayScalarRange: " << this->InvertDisplayScalarRange << "\n";
 }
 
 //---------------------------------------------------------------------------
@@ -571,12 +580,47 @@ void vtkMRMLScalarVolumeDisplayNode::UpdateLookupTable(vtkMRMLColorNode* newColo
   }
 
   if (lookupTable && this->GetScalarRangeFlag() != vtkMRMLDisplayNode::UseDirectMapping
-    && (lookupTable->GetRange()[0] != 0.0 || lookupTable->GetRange()[1] != 255.0))
+    && (lookupTable->GetRange()[0] != 0.0 || lookupTable->GetRange()[1] != 255.0 || this->GetInvertDisplayScalarRange()))
   {
     // Convert table range to 0, 255 to match the output from MapToWindowLevelColors
     vtkSmartPointer<vtkScalarsToColors> newLookupTable = vtkSmartPointer<vtkScalarsToColors>::Take(lookupTable->NewInstance());
     newLookupTable->DeepCopy(lookupTable);
     newLookupTable->SetRange(0, 255);
+
+    // If invert is enabled, invert the lookup table
+    if (this->GetInvertDisplayScalarRange())
+    {
+      if (vtkColorTransferFunction* ctf = vtkColorTransferFunction::SafeDownCast(newLookupTable))
+      {
+        // For continuous transfer functions, invert the positions
+        vtkNew<vtkColorTransferFunction> invertedCtf;
+        double range[2] = { 0,255 };
+        ctf->GetRange(range);
+        for (int i = 0; i < ctf->GetSize(); i++)
+        {
+          double val[6];
+          ctf->GetNodeValue(i, val);
+          // Invert the position while keeping the color
+          val[0] = range[0] + (range[1] - val[0]);
+          invertedCtf->AddRGBPoint(val[0], val[1], val[2], val[3], val[4], val[5]);
+        }
+        newLookupTable = invertedCtf;
+      }
+      else if (vtkLookupTable* lut = vtkLookupTable::SafeDownCast(newLookupTable))
+      {
+        // For discrete lookup tables, invert the table entries
+        vtkNew<vtkLookupTable> invertedLut;
+        invertedLut->SetNumberOfTableValues(lut->GetNumberOfTableValues());
+        invertedLut->SetRange(0, 255);
+        for (int i = 0; i < lut->GetNumberOfTableValues(); i++)
+        {
+          double rgba[4];
+          lut->GetTableValue(i, rgba);
+          invertedLut->SetTableValue(lut->GetNumberOfTableValues() - 1 - i, rgba);
+        }
+        newLookupTable = invertedLut;
+      }
+    }
     lookupTable = newLookupTable;
   }
 
@@ -786,4 +830,23 @@ void vtkMRMLScalarVolumeDisplayNode::CalculateAutoLevels()
   }
   this->EndModify(disabledModify);
   this->IsInCalculateAutoLevels = false;
+}
+
+//---------------------------------------------------------------------------
+vtkScalarsToColors* vtkMRMLScalarVolumeDisplayNode::GetLookupTable()
+{
+  return this->MapToColors->GetLookupTable();
+}
+
+//---------------------------------------------------------------------------
+void vtkMRMLScalarVolumeDisplayNode::SetInvertDisplayScalarRange(int invert)
+{
+  if (this->InvertDisplayScalarRange == invert)
+  {
+    // no change
+    return;
+  }
+  this->InvertDisplayScalarRange = invert;
+  this->UpdateLookupTable(this->GetColorNode());
+  this->Modified();
 }

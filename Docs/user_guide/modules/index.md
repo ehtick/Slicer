@@ -1,11 +1,5 @@
 # Modules
 
-:::{note}
-
-This documentation is still a work in progress. Additional module documentation is available on the [Slicer wiki](https://www.slicer.org/wiki/Documentation/Nightly).
-
-:::
-
 **Main modules**
 
 ```{toctree}
@@ -83,6 +77,8 @@ multivolumeexplorer.md
 :maxdepth: 1
 dwiconvert.md
 brainsdwicleanup.md
+resampledtivolume.md
+resamplescalarvectordwivolume.md
 ```
 
 ## Filtering
@@ -141,8 +137,6 @@ createdicomseries.md
 cropvolume.md
 orientscalarvolume.md
 vectortoscalarvolume.md
-resampledtivolume.md
-resamplescalarvectordwivolume.md
 ```
 
 ## Developer Tools

@@ -141,6 +141,10 @@ vtkMRMLSequenceBrowserNode* vtkSlicerSceneViewsModuleLogic::ConvertSceneViewNode
 
   if (!sequenceBrowser)
   {
+    sequenceBrowser = this->AddNewSceneViewSequenceBrowserNode();
+  }
+  if (!sequenceBrowser)
+  {
     vtkErrorMacro("ConvertSceneViewNodeToSequenceBrowserNode: Failed to get or create sequence browser node.");
     return nullptr;
   }
@@ -225,6 +229,7 @@ vtkMRMLSequenceBrowserNode* vtkSlicerSceneViewsModuleLogic::ConvertSceneViewNode
     node->SetDisableModifiedEvent(wasDisabledModifiedEntry.second);
   }
   this->GetMRMLScene()->RemoveNode(sceneViewNode);
+  return sequenceBrowser;
 }
 
 //-----------------------------------------------------------------------------
@@ -431,7 +436,7 @@ void vtkSlicerSceneViewsModuleLogic::CreateSceneView(std::vector<vtkMRMLNode*> s
       sequenceNode->SetIndexType(vtkMRMLSequenceNode::TextIndex);
       sequenceNode->SetAttribute(vtkSlicerSceneViewsModuleLogic::GetSceneViewNodeAttributeName(),
         vtkSlicerSceneViewsModuleLogic::GetSceneViewNodeAttributeValue());
-      sequenceBrowser->SetMissingItemMode(sequenceNode, vtkMRMLSequenceBrowserNode::MissingItemIgnore);
+      sequenceBrowser->SetMissingItemMode(sequenceNode, vtkMRMLSequenceBrowserNode::MissingItemDisplayHidden);
     }
     sequenceBrowser->SetRecording(sequenceNode, true);
   }
@@ -647,7 +652,7 @@ int vtkSlicerSceneViewsModuleLogic::SceneViewIndexToSequenceBrowserIndex(int sce
   for (vtkMRMLNode* node : nodes)
   {
     vtkMRMLSequenceBrowserNode* sequenceBrowserNode = vtkMRMLSequenceBrowserNode::SafeDownCast(node);
-    if (!sequenceBrowserNode)
+    if (!sequenceBrowserNode || !this->IsSceneViewNode(sequenceBrowserNode))
     {
       continue;
     }
