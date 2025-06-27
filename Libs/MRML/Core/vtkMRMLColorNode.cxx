@@ -156,7 +156,7 @@ void vtkMRMLColorNode::PrintSelf(ostream& os, vtkIndent indent)
       }
       os << indent << indent << i << " ";
       os << this->GetColorName(i);
-      if (i < this->GetNumberOfColors())
+      if (i < static_cast<unsigned int>(this->GetNumberOfColors()))
       {
         double color[4];
         this->GetColor(i, color);
@@ -687,7 +687,7 @@ int vtkMRMLColorNode::SetColorName(int ind, const char* name)
     return 0;
   }
   PropertyType& prop = this->Properties[ind];
-  if (prop.Name != name)
+  if (prop.Name != name || !prop.Defined)
   {
     prop.Name = name;
     prop.Defined = true;
@@ -768,7 +768,7 @@ void vtkMRMLColorNode::SetAllColorsDefined()
 {
   int numberOfColors = this->GetNumberOfColors();
   bool modified = false;
-  if (this->Properties.size() < numberOfColors)
+  if (this->Properties.size() < static_cast<size_t>(numberOfColors))
   {
     this->Properties.resize(numberOfColors);
     modified = true;

@@ -1,4 +1,4 @@
-target-version = "py39"
+target-version = "py312"
 line-length = 550
 
 extend-exclude = [
@@ -46,6 +46,7 @@ extend-ignore = [
   "B028",    # No explicit `stacklevel` keyword argument found
   "B904",    # Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None`
              # to distinguish them from errors in exception handling
+
   "C413",    # Unnecessary `reversed` call around `sorted()`
   "C408",    # Unnecessary `dict` call (rewrite as a literal)
   "C418",    # Unnecessary `dict` literal passed to `dict()` (remove the outer call to `dict()`)
@@ -77,6 +78,8 @@ extend-ignore = [
   "ISC002",  # Implicitly concatenated string literals over multiple lines
   "ISC003",  # Explicitly concatenated string should be implicitly concatenated
 
+  "PLC0415", # import outside top level
+
   "PLR0912", # Too many branche
   "PLR0913", # Too many arguments in function definition
   "PLR0911", # Too many return statements
@@ -91,6 +94,7 @@ extend-ignore = [
   "PLW0127", # self-assigning-variable 	Self-assignment of variable {name}
   "PLW0602", # Using global for `{name}` but no assignment is done
   "PLW0603", # Using the global statement to update {name} is discouraged
+  "PLW1641", # `__eq__` without `__hash__`
   "PLW2901", # Outer {outer_kind} variable {name} overwritten by inner {inner_kind} target
 
   "Q003",    # Change outer quotes to avoid escaping inner quotes
@@ -114,10 +118,12 @@ extend-ignore = [
   "SIM101",  # Duplicate isinstance call
   "SIM115",  # Use context handler for opening files
 
+  "UP007",   # non-pep604 annotation union
   "UP018",   # Unnecessary `int` call (rewrite as a literal)
   "UP030",   # Use implicit references for positional format fields
   "UP031",   # Use format specifiers instead of percent format
   "UP032",   # Use f-string instead of `format` call
+  "UP038",   # non-pep604 isinstance
 ]
 
 [lint.pydocstyle]
