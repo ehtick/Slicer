@@ -1,5 +1,5 @@
 import unittest
-from typing import Annotated, Any, Union
+from typing import Annotated, Any
 
 import slicer
 from slicer import vtkMRMLModelNode
@@ -447,7 +447,7 @@ class TypedParameterNodeTest(unittest.TestCase):
         class ParameterPack:
             box: BoundingBox
             value: int
-            union: Union[int, str]
+            union: int | str
             annotated: Annotated[bool, Default(True)]
             annotatedBox: BoundingBox = BoundingBox(Point(-99, 8), Point(11, 10))
             annotatedSub: AnnotatedSub
@@ -456,7 +456,7 @@ class TypedParameterNodeTest(unittest.TestCase):
         self.assertEqual(ParameterPack.dataType("box.topLeft"), Point)
         self.assertEqual(ParameterPack.dataType("box.topLeft.x"), float)
         self.assertEqual(ParameterPack.dataType("value"), int)
-        self.assertEqual(ParameterPack.dataType("union"), Union[int, str])
+        self.assertEqual(ParameterPack.dataType("union"), int | str)
         self.assertEqual(ParameterPack.dataType("annotated"), Annotated[bool, Default(True)])
         self.assertEqual(ParameterPack.dataType("annotatedBox"), BoundingBox)
         self.assertEqual(ParameterPack.dataType("annotatedBox.topLeft"), Point)
@@ -468,7 +468,7 @@ class TypedParameterNodeTest(unittest.TestCase):
         self.assertEqual(param.dataType("box.topLeft"), Point)
         self.assertEqual(param.dataType("box.topLeft.x"), float)
         self.assertEqual(param.dataType("value"), int)
-        self.assertEqual(param.dataType("union"), Union[int, str])
+        self.assertEqual(param.dataType("union"), int | str)
         self.assertEqual(param.dataType("annotated"), Annotated[bool, Default(True)])
         self.assertEqual(param.dataType("annotatedBox"), BoundingBox)
         self.assertEqual(param.dataType("annotatedBox.topLeft"), Point)

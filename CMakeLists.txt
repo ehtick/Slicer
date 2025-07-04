@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16.3...3.19.7 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20.6...3.22.6 FATAL_ERROR)
 
 if("${CMAKE_VERSION}" VERSION_EQUAL "3.21.0")
   message(FATAL_ERROR "CMake version is ${CMAKE_VERSION} and using CMake==3.21.0 is not supported.\nSee https://gitlab.kitware.com/cmake/cmake/-/issues/22476")
@@ -217,7 +217,7 @@ mark_as_superbuild(Slicer_REQUIRED_QT_VERSION)
 # Python requirements
 #-----------------------------------------------------------------------------
 if(NOT DEFINED Slicer_REQUIRED_PYTHON_VERSION)
-  set(Slicer_REQUIRED_PYTHON_VERSION "3.9.10")
+  set(Slicer_REQUIRED_PYTHON_VERSION "3.12.10")
 endif()
 mark_as_superbuild(Slicer_REQUIRED_PYTHON_VERSION)
 

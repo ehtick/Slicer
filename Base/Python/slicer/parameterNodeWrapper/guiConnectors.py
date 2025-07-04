@@ -8,7 +8,9 @@ import dataclasses
 import enum
 import logging
 import pathlib
-from typing import Union
+import types
+import typing
+from itertools import pairwise
 
 import ctk
 import qt
@@ -45,7 +47,7 @@ class Decimals:
 class SingleStep:
     """Annotation for Qt's setSingleStep methods for spinboxes and sliders."""
 
-    value: Union[float, int]
+    value: float | int
 
 
 class GuiConnector(abc.ABC):
@@ -126,6 +128,10 @@ def createGuiConnector(widget, datatype) -> GuiConnector:
     Creates an appropriate GuiConnector for the given widget object and possibly annotated datatype.
     Raises a RuntimeError if no appropriate GuiConnector is found.
     """
+    if hasattr(types, "UnionType") and isinstance(datatype, types.UnionType):
+        # Convert types.UnionType to typing.Union for connector compatibility
+        datatype = typing.Union[tuple(typing.get_args(datatype))]
+
     for possibleConnectorType in _registeredGuiConnectors:
         if possibleConnectorType.canRepresent(widget, datatype):
             return possibleConnectorType.create(widget, datatype)
@@ -758,9 +764,9 @@ def _extractCorrectWidgets(widget):
     # Remove stacks that are completely contained within other stacks.
     # note: just doing `sorted(parentStacks, key=lambda x: id(x))` wasn't sorting it right
     ids = [[id(w) for w in ww] for ww in parentStacks]
-    parentStacks, _ = zip(*sorted(zip(parentStacks, ids), key=lambda w: w[1]))
+    parentStacks, _ = zip(*sorted(zip(parentStacks, ids, strict=True), key=lambda w: w[1]), strict=True)
 
-    leafParentStacks = [i for i, j in zip(parentStacks[:-1], parentStacks[1:]) if not i == j[:len(i)]] \
+    leafParentStacks = [i for i, j in pairwise(parentStacks) if not i == j[:len(i)]] \
         + [parentStacks[-1]]
     return leafParentStacks
 
