@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16.3...3.19.7 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20.6...3.22.6 FATAL_ERROR)
 
 if("${CMAKE_VERSION}" VERSION_EQUAL "3.21.0")
   message(FATAL_ERROR "CMake version is ${CMAKE_VERSION} and using CMake==3.21.0 is not supported.\nSee https://gitlab.kitware.com/cmake/cmake/-/issues/22476")
@@ -217,7 +217,7 @@ mark_as_superbuild(Slicer_REQUIRED_QT_VERSION)
 # Python requirements
 #-----------------------------------------------------------------------------
 if(NOT DEFINED Slicer_REQUIRED_PYTHON_VERSION)
-  set(Slicer_REQUIRED_PYTHON_VERSION "3.9.10")
+  set(Slicer_REQUIRED_PYTHON_VERSION "3.12.10")
 endif()
 mark_as_superbuild(Slicer_REQUIRED_PYTHON_VERSION)
 
@@ -434,11 +434,11 @@ if(NOT "${Slicer_VTK_VERSION_MAJOR}" MATCHES "^(9)$")
 endif()
 mark_as_superbuild(Slicer_VTK_VERSION_MAJOR)
 
-set(_default_vtk_minor_version "4")
-set(Slicer_VTK_VERSION_MINOR ${_default_vtk_minor_version} CACHE STRING "VTK minor version (2 or 4)")
-set_property(CACHE Slicer_VTK_VERSION_MINOR PROPERTY STRINGS "2" "4")
-if(NOT "${Slicer_VTK_VERSION_MINOR}" MATCHES "^(2|4)$")
-  message(FATAL_ERROR "error: Slicer_VTK_VERSION_MINOR must be 2 or 4.")
+set(_default_vtk_minor_version "5")
+set(Slicer_VTK_VERSION_MINOR ${_default_vtk_minor_version} CACHE STRING "VTK minor version (2, 4 or 5)")
+set_property(CACHE Slicer_VTK_VERSION_MINOR PROPERTY STRINGS "2" "4" "5")
+if(NOT "${Slicer_VTK_VERSION_MINOR}" MATCHES "^(2|4|5)$")
+  message(FATAL_ERROR "error: Slicer_VTK_VERSION_MINOR must be 2, 4 or 5.")
 endif()
 mark_as_superbuild(Slicer_VTK_VERSION_MINOR)
 

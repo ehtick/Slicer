@@ -41,8 +41,10 @@
 class qMRMLColorTableViewPrivate
 {
   Q_DECLARE_PUBLIC(qMRMLColorTableView);
+
 protected:
   qMRMLColorTableView* const q_ptr;
+
 public:
   qMRMLColorTableViewPrivate(qMRMLColorTableView& object);
   void init();
@@ -76,10 +78,12 @@ void qMRMLColorTableViewPrivate::init()
 
   q->setItemDelegate(new qMRMLItemDelegate(q));
   q->setItemDelegateForColumn(colorModel->terminologyColumn(), new qSlicerColorTableTerminologyDelegate(q));
+
+  q->sortFilterProxyModel()->setShowEmptyColors(false);
 }
 
 //------------------------------------------------------------------------------
-qMRMLColorTableView::qMRMLColorTableView(QWidget *_parent)
+qMRMLColorTableView::qMRMLColorTableView(QWidget* _parent)
   : QTableView(_parent)
   , d_ptr(new qMRMLColorTableViewPrivate(*this))
 {
@@ -91,13 +95,13 @@ qMRMLColorTableView::qMRMLColorTableView(QWidget *_parent)
 qMRMLColorTableView::~qMRMLColorTableView() = default;
 
 //------------------------------------------------------------------------------
-qMRMLColorModel* qMRMLColorTableView::colorModel()const
+qMRMLColorModel* qMRMLColorTableView::colorModel() const
 {
   return qobject_cast<qMRMLColorModel*>(this->sortFilterProxyModel()->sourceModel());
 }
 
 //------------------------------------------------------------------------------
-qMRMLSortFilterColorProxyModel* qMRMLColorTableView::sortFilterProxyModel()const
+qMRMLSortFilterColorProxyModel* qMRMLColorTableView::sortFilterProxyModel() const
 {
   return qobject_cast<qMRMLSortFilterColorProxyModel*>(this->model());
 }
@@ -117,12 +121,12 @@ void qMRMLColorTableView::setMRMLColorNode(vtkMRMLColorNode* node)
   mrmlModel->setMRMLColorNode(node);
   this->sortFilterProxyModel()->invalidate();
 
-  this->setEditTriggers( (node && node->GetType() == vtkMRMLColorTableNode::User) ?
-    QAbstractItemView::DoubleClicked | QAbstractItemView::EditKeyPressed : QAbstractItemView::NoEditTriggers);
+  this->setEditTriggers((node && node->GetType() == vtkMRMLColorTableNode::User) ? QAbstractItemView::DoubleClicked | QAbstractItemView::EditKeyPressed
+                                                                                 : QAbstractItemView::NoEditTriggers);
 }
 
 //------------------------------------------------------------------------------
-vtkMRMLColorNode* qMRMLColorTableView::mrmlColorNode()const
+vtkMRMLColorNode* qMRMLColorTableView::mrmlColorNode() const
 {
   qMRMLColorModel* mrmlModel = this->colorModel();
   Q_ASSERT(mrmlModel);
@@ -136,20 +140,20 @@ void qMRMLColorTableView::setShowOnlyNamedColors(bool enable)
 }
 
 //------------------------------------------------------------------------------
-bool qMRMLColorTableView::showOnlyNamedColors()const
+bool qMRMLColorTableView::showOnlyNamedColors() const
 {
   return this->sortFilterProxyModel()->filterRegExp().isEmpty();
 }
 
 //------------------------------------------------------------------------------
-int qMRMLColorTableView::rowFromColorName(const QString& colorName)const
+int qMRMLColorTableView::rowFromColorName(const QString& colorName) const
 {
   int index = this->colorModel()->colorFromName(colorName);
   return this->rowFromColorIndex(index);
 }
 
 //------------------------------------------------------------------------------
-int qMRMLColorTableView::rowFromColorIndex(int colorIndex)const
+int qMRMLColorTableView::rowFromColorIndex(int colorIndex) const
 {
   QModelIndexList indexes = this->colorModel()->indexes(colorIndex);
   if (indexes.isEmpty())

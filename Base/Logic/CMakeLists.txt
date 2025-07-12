@@ -128,6 +128,12 @@ set(SlicerBaseLogic_SRCS
   vtkImageFillROI.cxx
   )
 
+if(Slicer_BUILD_CLI_SUPPORT)
+  list(APPEND SlicerBaseLogic_SRCS
+    vtkSlicerCLIModuleLogic.cxx
+    )
+endif()
+
 if(Slicer_USE_PYTHONQT)
   list(APPEND SlicerBaseLogic_SRCS
     vtkSlicerScriptedLoadableModuleLogic.cxx

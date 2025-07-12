@@ -1,7 +1,7 @@
 project(MRMLCore)
 
 #-----------------------------------------------------------------------------
-cmake_minimum_required(VERSION 3.16.3...3.19.7 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20.6...3.22.6 FATAL_ERROR)
 #-----------------------------------------------------------------------------
 
 # --------------------------------------------------------------------------
@@ -107,7 +107,6 @@ set(include_dirs
   ${vtkITK_INCLUDE_DIRS}
   ${vtkSegmentationCore_INCLUDE_DIRS}
   ${LibArchive_INCLUDE_DIR}
-  ${RapidJSON_INCLUDE_DIR}
   )
 if(MRML_USE_vtkTeem)
   list(APPEND include_dirs ${vtkTeem_INCLUDE_DIRS})
@@ -358,6 +357,7 @@ set(libs
   ${VTK_LIBRARIES}
   VTK::IOInfovis
   ${LibArchive_LIBRARY}
+  RapidJSON
   )
 if(MRML_USE_vtkTeem)
   list(APPEND libs vtkTeem)
