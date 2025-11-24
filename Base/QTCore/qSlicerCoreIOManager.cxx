@@ -33,6 +33,7 @@
 #include "qSlicerCoreIOManager.h"
 #include "qSlicerFileReader.h"
 #include "qSlicerFileWriter.h"
+#include "qSlicerUtils.h"
 
 // MRML includes
 #include <vtkMRMLApplicationLogic.h>
@@ -113,7 +114,12 @@ QList<qSlicerFileReader*> qSlicerCoreIOManagerPrivate::readers(const QString& fi
   }
   // Put matching readers in a list, with highest confidence readers pushed to the front
   QList<qSlicerFileReader*> matchingReaders;
+
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+  QMultiMapIterator<double, qSlicerFileReader*> i(matchingReadersSortedByConfidence);
+#else
   QMapIterator<double, qSlicerFileReader*> i(matchingReadersSortedByConfidence);
+#endif
   while (i.hasNext())
   {
     i.next();
@@ -362,7 +368,11 @@ QStringList qSlicerCoreIOManager::fileWriterExtensions(vtkObject* object) const
   }
   // Put extensions from matching writers in a list, with highest confidence writer pushed to the front
   QStringList matchingExtensions;
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+  QMultiMapIterator<double, qSlicerFileWriter*> i(matchingWritersSortedByConfidence);
+#else
   QMapIterator<double, qSlicerFileWriter*> i(matchingWritersSortedByConfidence);
+#endif
   while (i.hasNext())
   {
     i.next();
@@ -1014,7 +1024,7 @@ bool qSlicerCoreIOManager::exportNodes(const QList<qSlicerIO::IOProperties>& par
 
     // Copy parameters map; we will need to set the nodeID parameter to correspond to the node in the temporary scene
     qSlicerIO::IOProperties temporarySceneParameters = parameters;
-    temporarySceneParameters["nodeID"] = temporaryStorableNode->GetID();
+    temporarySceneParameters["nodeID"] = qSlicerUtils::safeQStringFromUtf8Ptr(temporaryStorableNode->GetID());
 
     // Deduce "fileType" from "fileFormat" parameter; saveNodes will want both
     qSlicerIO::IOFileType fileType = this->fileWriterFileType(storableNode, parameters["fileFormat"].toString());
